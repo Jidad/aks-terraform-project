@@ -1,0 +1,44 @@
+# Terraform state and lock files
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Terraform provider cache (large binaries)
+.terraform/
+
+# Environment-specific variables (contain secrets)
+envs/
+
+# Kubeconfig files
+.kube/
+kubeconfig*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Terraform logs
+crash.log
+crash.*.log
+
+# Terraform override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform CLI files
+.terraformrc
+terraform.rc
+
+# Local development
+*.local
+.env
+.env.local
