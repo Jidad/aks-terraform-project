@@ -1,118 +1,218 @@
-# 🚀 Azure Kubernetes Service (AKS) Terraform Project
+# K8S Internal Developer Platform — Infrastructure (AKS) — Terraform
+
+# K8S Internal Developer Platform — Infrastructure (AKS) — Terraform
 
 ## Project Overview
 
-This project provisions an **Azure Kubernetes Service (AKS)** cluster and all supporting infrastructure using **Terraform**. It provides a robust, secure, and repeatable cloud environment setup, including:
+This project provisions an AKS cluster with supporting infrastructure using Terraform, including:
 
-* **Multi-Environment Support:** Dedicated configurations for **Dev**, **Stage**, and **Prod** environments.
-* **Secure Networking:** VNet with 4 subnets per environment (2 public, 2 private) for proper network segregation and AKS security.
-* **Data Tier:** **Azure MySQL Flexible Server** secured with a **private endpoint**.
-* **Container Management:** **Azure Container Registry (ACR)** for storing application images.
-* **Secret Management:** **Azure Key Vault** for securely storing application secrets and configuration data.
-* **CI/CD Friendly:** Designed for seamless integration with modern CI/CD pipelines using **Terraform Workspaces**.
+* Multi-environment support: Dev, Stage, Prod
+* Secure networking: 1 public + 2 private subnets per environment
+* Azure MySQL Flexible Server with private endpoint
+* Azure Container Registry (ACR)
+* Azure Key Vault for secrets
+* CI/CD-friendly setup with workspaces
 
 ---
 
-## 🏗️ Project Structure
+Principles:
 
-The repository is structured to separate reusable modules from environment-specific configurations.
+* Never hardcode values: use variables and `envs/*/terraform.tfvars`.
+* Support multiple regions & subscriptions: pass `subscription_id` and `location` per environment.
+* Secrets in Azure Key Vault.
+* ACR access granted to AKS via role assignment.
+* Dev access limited to whitelisted IPs; Stage/Prod access via CI/CD.
 
-```bash
+## Project Structure
+
+```
 aks-terraform-project/
 ├─ modules/
-│  ├─ network/      # Reusable VNet and Subnet module
-│  ├─ aks/          # Reusable AKS cluster module
-│  ├─ mysql/        # Reusable Azure MySQL Flexible Server module
-│  ├─ acr/          # Reusable Azure Container Registry module
-│  └─ keyvault/     # Reusable Azure Key Vault module
+│  ├─ network/
+│  ├─ aks/
+│  ├─ mysql/
+│  ├─ acr/
+│  └─ keyvault/
 ├─ envs/
-│  ├─ dev/          # Dev environment variables and specific configurations
-│  ├─ stage/        # Stage environment variables and specific configurations
-│  └─ prod/         # Prod environment variables and specific configurations
+│  ├─ dev/
+│  ├─ stage/
+│  └─ prod/
 ├─ scripts/
-│  ├─ get-kubeconfig.sh # Utility to fetch the kubeconfig after deployment
-│  ├─ terraform.sh      # Wrapper script for simplified Terraform execution (Bash/Linux)
-│  └─ terraform.ps1     # Wrapper script for simplified Terraform execution (PowerShell/Windows)
-├─ providers.tf    # Cloud provider configuration (Azure)
-├─ variables.tf    # Global variable definitions
-├─ main.tf         # Main entry point for module calls
-├─ outputs.tf      # Defines the deployment outputs
-├─ README.md       # This file
-├─ DEVELOPER_GUIDE.md # Detailed guide for local development and setup
-└─ DEPLOYMENT.md   # Detailed guide for pipeline deployment
+│  ├─ get-kubeconfig.sh
+│  ├─ terraform.ps1
+│  └─ terraform.sh
+├─ providers.tf
+├─ variables.tf
+├─ main.tf
+├─ outputs.tf
+├─ README.md
+├─ DEVELOPER_GUIDE.md
+└─ DEPLOYMENT.md
 ```
 
-
-## 🗺️ Architecture Diagram
-
-The following diagram illustrates the high-level infrastructure components and their connectivity within a single environment (e.g., Prod) provisioned by this Terraform project.
-
-![Azure AKS Architecture Diagram](images\architecure.jpg)
-
-*This visual shows how the AKS cluster, secured in **private subnets**, connects internally to the **Azure MySQL Private Endpoint** and **Key Vault**, while external traffic is managed via a load balancer/ingress component.*
+---
 
 
 
-## 🚦 FULL TRAFFIC MATRIX
+## Automatic Environment Variable Workflow
 
-This matrix details the required network flows, protocols, and security actions for the entire AKS ecosystem, including application, control plane, and development access.
+1. Terraform Workspaces isolate Dev, Stage, Prod
+2. Wrapper scripts automatically load the correct `terraform.tfvars` file based on the selected workspace.
 
-| Source | Destination | Port/Protocol | Direction | Action | Reason |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **User (Internet)** | Public Subnet (AGW / Ingress IP) | 80, 443 | Inbound | Allow | App Gateway/Ingress must serve apps |
-| Public Subnet User | Internet | 80, 443 | Outbound | Allow | Response traffic |
-| **AKS Nodes** | API Server | 443 | Outbound | Allow | Required for AKS cluster operations |
-| **API Server** | AKS Nodes | 443 | Inbound | Allow | Managed by Azure automatically |
-| AKS Nodes | AKS Nodes | 10250, 443, VXLAN | Both | Allow | Node-to-node communication |
-| **AKS Pods** | MySQL DB Private Endpoint | 3306 | Outbound | Allow | App reads/writes DB |
-| MySQL Private Endpoint | AKS Pods | 3306 | Inbound | Allow | Response |
-| **AKS Nodes** | Key Vault | 443 | Outbound | Allow | Fetch secrets for app or CSI driver |
-| **AKS Nodes** | ACR | 443 | Outbound | Allow | Node pulls images |
-| Dev Workstation | MySQL (Dev Only) | 3306 | Inbound | Allow | Debugging/testing DB access |
-| Dev Workstation | AKS API Server | 443 | Outbound | Allow | Secure `kubectl` access |
-| Stage/Prod Workstation | DB | 3306 | Inbound | Deny | Security — no direct DB access |
-| Public Subnets | Private Subnets | Any | Inbound | Deny | No inbound from public to private |
-
-## ⚙️ Automatic Environment Variable Workflow
-
-This project utilizes **Terraform Workspaces** to isolate state files and variables for each environment. The wrapper script automatically identifies the current workspace and loads the corresponding `.tfvars` file. 
-
-| Workspace | Variables File Loaded |
-| :-------- | :-------------------- |
-| `dev`     | `envs/dev/terraform.tfvars` |
-| `stage`   | `envs/stage/terraform.tfvars` |
-| `prod`    | `envs/prod/terraform.tfvars` |
-
-> 🔑 This eliminates all interactive prompts for variables during plan/apply.
-
-### Example Usage
-
-#### Select or Create a Workspace:
+### Example Usage:
 
 ```bash
-# Select the 'dev' workspace. If it doesn't exist, create it.
+terraform workspace list
 terraform workspace select dev || terraform workspace new dev
-```
-### Plan Deployment:
 
-```bash
-# The script automatically loads the correct .tfvars file
 ./scripts/terraform.sh plan
+./scripts/terraform.sh apply -auto-approve
 ```
 
-### Apply Deployment::
+* `dev` → `envs/dev/terraform.tfvars`
+* `stage` → `envs/stage/terraform.tfvars`
+* `prod` → `envs/prod/terraform.tfvars`
 
-```bash
-# Executes the deployment for the selected workspace
-./scripts/terraform.sh apply
+This eliminates all interactive variable prompts.
+
+---
+
+## **Naming Conventions & Tagging Standards**
+
+> **This section defines the official naming rules used across all Terraform modules in this project.**
+
+### 1. General Naming Guidelines
+
+| Rule                  | Details                                                      |
+| --------------------- | ------------------------------------------------------------ |
+| Prefix                | `project-environment` (example: `cloudproj-dev`)             |
+| Separator             | Hyphens (`-`) only                                           |
+| Resource suffix       | Add resource type at end (`-vnet`, `-nsg`, `-aks`, `-mysql`) |
+| Lowercase             | All names must be lowercase                                  |
+| No special characters | Only letters, numbers, hyphens                               |
+
+**Examples:**
+
+* `cloudproj-dev-vnet`
+* `cloudproj-prod-mysql`
+* `cloudproj-stage-aks`
+* `cloudproj-dev-kv`
+* `cloudprojdevacr` (ACR requires no hyphens)
+
+---
+
+### 2. Resource-Specific Naming
+
+#### **2.1 Resource Groups**
+
+`<project>-<environment>-rg`
+
+* Example: `cloudproj-dev-rg`
+
+#### **2.2 Virtual Networks**
+
+`<project>-<environment>-vnet`
+
+#### **2.3 Subnets**
+
+Subnet keys: `egress`, `aks`, `database`
+
+NSG naming:
+`<project>-<environment>-<subnet>-nsg`
+
+Optional route tables:
+`<project>-<environment>-private-rt-<number>`
+
+#### **2.4 NSGs**
+
+Example:
+`cloudproj-dev-aks-nsg`
+
+#### **2.5 AKS Cluster**
+
+```
+Name: <project>-<environment>-aks
+DNS Prefix: <project>-<environment>-aks
+Node Pool: default
 ```
 
-## 📥 Outputs
+#### **2.6 Azure MySQL Flexible Server**
 
-Upon successful deployment, the following key infrastructure identifiers are provided in the output:
+```
+Name: <project>-<environment>-mysql
+Private Endpoint: <project>-<environment>-db-pe
+Private Service Connection: <project>-<environment>-db-psc
+```
 
-* **Networking:** VNet ID, all Subnet IDs, Network Security Group (NSG) IDs, and User Defined Route (UDR) IDs.
-* **AKS:** AKS cluster name and the required **kubeconfig**.
-* **Data Tier:** MySQL Fully Qualified Domain Name (FQDN) and private endpoint ID.
-* **ACR:** The ACR login server name.
+#### **2.7 Azure Container Registry (ACR)**
 
+```
+<project><environment>acr
+```
+
+(No hyphens allowed.)
+
+#### **2.8 Azure Key Vault**
+
+```
+<project>-<environment>-kv
+```
+
+---
+
+### 3. Environment Naming
+
+| Environment | Workspace | tfvars file                   |
+| ----------- | --------- | ----------------------------- |
+| Development | `dev`     | `envs/dev/terraform.tfvars`   |
+| Staging     | `stage`   | `envs/stage/terraform.tfvars` |
+| Production  | `prod`    | `envs/prod/terraform.tfvars`  |
+
+All resources must include environment code.
+
+---
+
+### 4. Tagging Standards
+
+| Tag Key       | Description    | Example            |
+| ------------- | -------------- | ------------------ |
+| `environment` | Dev/Stage/Prod | dev                |
+| `project`     | Project name   | cloudproj          |
+| `owner`       | Team           | devops             |
+| `cost_center` | Optional       | ops-team-01        |
+| `purpose`     | Optional       | backend / database |
+
+Tags must be applied consistently across all modules.
+
+---
+
+### 5. Resource Names Across Environments
+
+| Resource Type    | Dev                   | Stage                   | Prod                   |
+| ---------------- | --------------------- | ----------------------- | ---------------------- |
+| Resource Group   | cloudproj-dev-rg      | cloudproj-stage-rg      | cloudproj-prod-rg      |
+| VNet             | cloudproj-dev-vnet    | cloudproj-stage-vnet    | cloudproj-prod-vnet    |
+| NSGs             | cloudproj-dev-aks-nsg | cloudproj-stage-aks-nsg | cloudproj-prod-aks-nsg |
+| AKS              | cloudproj-dev-aks     | cloudproj-stage-aks     | cloudproj-prod-aks     |
+| MySQL            | cloudproj-dev-mysql   | cloudproj-stage-mysql   | cloudproj-prod-mysql   |
+| Private Endpoint | cloudproj-dev-db-pe   | cloudproj-stage-db-pe   | cloudproj-prod-db-pe   |
+| ACR              | cloudprojdevacr       | cloudprojstageacr       | cloudprojprodacr       |
+| Key Vault        | cloudproj-dev-kv      | cloudproj-stage-kv      | cloudproj-prod-kv      |
+
+---
+
+## Outputs
+
+* VNet ID, Subnet IDs, NSGs, UDRs
+* AKS cluster name & kubeconfig
+* MySQL FQDN & private endpoint
+* ACR login server
+
+---
+
+## Additional Documentation
+
+* **DEPLOYMENT.md** – Full deployment steps
+* **DEVELOPER_GUIDE.md** – Cluster access, ACR usage, MySQL access, best practices
+
+---

@@ -17,6 +17,21 @@ resource "azurerm_mysql_flexible_server" "mysql" {
   # directly in some provider versions, so remove explicit configuration.
 }
 
+# Private DNS Zone for MySQL Private Link
+resource "azurerm_private_dns_zone" "mysql" {
+  name                = "privatelink.mysql.database.azure.com"
+  resource_group_name = var.resource_group_name
+}
+
+# Link Private DNS Zone to VNet
+resource "azurerm_private_dns_zone_virtual_network_link" "mysql" {
+  name                  = "${var.project_name}-${var.environment}-mysql-dns-link"
+  resource_group_name   = var.resource_group_name
+  private_dns_zone_name = azurerm_private_dns_zone.mysql.name
+  virtual_network_id    = var.vnet_id
+  registration_enabled  = false
+}
+
 # Private endpoint to database subnet
 resource "azurerm_private_endpoint" "db_pe" {
   name                = "${var.project_name}-${var.environment}-db-pe"
@@ -30,9 +45,11 @@ resource "azurerm_private_endpoint" "db_pe" {
     private_connection_resource_id = azurerm_mysql_flexible_server.mysql.id
     subresource_names              = ["mysqlServer"]
   }
-}
 
-// Private DNS handling for MySQL removed here — module creates the Private
-// Endpoint only. If you need private DNS records, create them in a separate
-// DNS management module or via a centralized process that targets your
-// environment's provider version.
+  private_dns_zone_group {
+    name                 = "mysql-dns-zone-group"
+    private_dns_zone_ids = [azurerm_private_dns_zone.mysql.id]
+  }
+
+  depends_on = [azurerm_private_dns_zone_virtual_network_link.mysql]
+}

@@ -7,6 +7,11 @@ variable "resource_group_name" {
   description = "Resource group name from network module"
 }
 
+variable "vnet_id" {
+  type        = string
+  description = "VNet ID for Private DNS zone link"
+}
+
 variable "project_name" { type = string }
 variable "environment" { type = string }
 variable "location"    { type = string }

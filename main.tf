@@ -27,6 +27,7 @@ module "mysql" {
   mysql_admin_password = var.mysql_admin_password
   subnet_ids   = module.network.subnet_ids
   resource_group_name = module.network.resource_group_name
+  vnet_id      = module.network.vnet_id
 }
 
 module "acr" {
