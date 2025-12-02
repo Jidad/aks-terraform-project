@@ -1,6 +1,6 @@
-# Azure Kubernetes Service (AKS) Terraform Project
+# K8S Internal Developer Platform — Infrastructure (AKS) — Terraform
 
-# Azure Kubernetes Service (AKS) Terraform Project
+# K8S Internal Developer Platform — Infrastructure (AKS) — Terraform
 
 ## Project Overview
 
