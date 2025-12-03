@@ -140,4 +140,4 @@ Following these practices ensures a secure, maintainable, and repeatable deploym
 * Verify **NSG (Network Security Group) and UDR (User-Defined Route)** rules after deployment to ensure secure network flow matches the traffic matrix.
 * Always perform a careful review of the comprehensive **`terraform plan`** output before executing **`terraform apply`**.
 
-This robust setup ensures fully automated, repeatable deployments without prompting for variables manually.
+This robust setup ensures fully automated, repeatable deployments without prompting for the variables manually.
