@@ -123,7 +123,7 @@ To destroy all deployed infrastructure and avoid incurring further Azure costs, 
     terraform workspace select dev
     ```
 
-2.  **Execute Destroy:** The script will automatically load the correct variables and prompt you to confirm the destruction of all the resources defined in that workspace state.
+2.  **Execute Destroy:** The script will automatically load the correct variables and prompt you to confirm the destruction of all resources defined in that workspace state.
 
     ```bash
     ./scripts/terraform.sh destroy
