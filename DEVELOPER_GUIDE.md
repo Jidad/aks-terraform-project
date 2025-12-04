@@ -1,6 +1,6 @@
 # 💻 Azure Kubernetes Service (AKS) Terraform Project – Developer Guide
 
-This guide outlines the essential steps for setting up your local environment and understanding the core tools required to work with the **Dev** AKS cluster and its resources.
+This guide outlines the essential steps for setting up the your local environment and understanding the core tools required to work with the **Dev** AKS cluster and its resources.
 
 ---
 
