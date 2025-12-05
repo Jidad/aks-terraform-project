@@ -9,7 +9,7 @@ resource "azurerm_mysql_flexible_server" "mysql" {
   version  = "8.0.21"
   sku_name = var.mysql_sku_name
 
-  #storage_mb            = 5120
+  
   backup_retention_days = 7
   geo_redundant_backup_enabled = false
 
