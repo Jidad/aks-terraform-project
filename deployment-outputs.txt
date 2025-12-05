@@ -1,0 +1,11 @@
+acr_login_server = "cloudprojdevacr.azurecr.io"
+aks_fqdn = "cloudproj-dev-aks-7juc0c4u.hcp.australiacentral.azmk8s.io"
+aks_name = "cloudproj-dev-aks"
+keyvault_uri = "https://cloudproj-dev-kv-bhg6.vault.azure.net/"
+mysql_fqdn = "cloudproj-dev-mysql.mysql.database.azure.com"
+subnet_ids = {
+  "aks" = "/subscriptions/4498449e-cbcd-452c-9a04-69e911ee0ae4/resourceGroups/cloudproj-dev-rg/providers/Microsoft.Network/virtualNetworks/cloudproj-dev-vnet/subnets/aks"
+  "database" = "/subscriptions/4498449e-cbcd-452c-9a04-69e911ee0ae4/resourceGroups/cloudproj-dev-rg/providers/Microsoft.Network/virtualNetworks/cloudproj-dev-vnet/subnets/database"
+  "egress" = "/subscriptions/4498449e-cbcd-452c-9a04-69e911ee0ae4/resourceGroups/cloudproj-dev-rg/providers/Microsoft.Network/virtualNetworks/cloudproj-dev-vnet/subnets/egress"
+}
+vnet_id = "/subscriptions/4498449e-cbcd-452c-9a04-69e911ee0ae4/resourceGroups/cloudproj-dev-rg/providers/Microsoft.Network/virtualNetworks/cloudproj-dev-vnet"

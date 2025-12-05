@@ -1,0 +1,19 @@
+{
+  "name": "Azure Terraform AKS Dev",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+
+  "features": {},
+
+  "postCreateCommand": "chmod +x .devcontainer/setup-tools.sh && bash .devcontainer/setup-tools.sh",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-azureresourcegroups",
+        "ms-azuretools.vscode-azureterraform",
+        "HashiCorp.terraform",
+        "ms-kubernetes-tools.vscode-kubernetes-tools"
+      ]
+    }
+  }
+}
