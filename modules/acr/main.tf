@@ -19,7 +19,7 @@ resource "azurerm_container_registry" "acr" {
   }
 }
 
-# Optional Private Endpoint for ACR
+# Optional the Private Endpoint for ACR
 resource "azurerm_private_endpoint" "acr_pe" {
   count               = var.enable_private_endpoint ? 1 : 0
   name                = "${var.project_name}-${var.environment}-acr-pe"
